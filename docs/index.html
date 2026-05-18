@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GDGoC-UIT Build with AI — Codelabs</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Google Sans', Roboto, Arial, sans-serif;
+      background: #f8f9fa;
+      color: #202124;
+      min-height: 100vh;
+    }
+    header {
+      background: #4285f4;
+      color: white;
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header img { height: 40px; }
+    header h1 { font-size: 1.5rem; font-weight: 500; }
+    header p { font-size: 0.9rem; opacity: 0.85; margin-top: 4px; }
+    main {
+      max-width: 960px;
+      margin: 48px auto;
+      padding: 0 24px;
+    }
+    h2 { font-size: 1.1rem; color: #5f6368; margin-bottom: 24px; font-weight: 400; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .card-banner {
+      background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+    .card-body { padding: 20px; flex: 1; }
+    .card-body h3 { font-size: 1rem; font-weight: 500; margin-bottom: 8px; }
+    .card-body p { font-size: 0.875rem; color: #5f6368; line-height: 1.5; }
+    .card-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #e8eaed;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #5f6368;
+    }
+    .tag {
+      background: #e8f0fe;
+      color: #1a73e8;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+    }
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      color: #5f6368;
+      font-size: 0.85rem;
+    }
+    footer a { color: #1a73e8; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>GDGoC-UIT Build with AI</h1>
+    <p>Hands-on codelabs for the Build with AI 2026 event</p>
+  </div>
+</header>
+
+<main>
+  <h2>Available Codelabs</h2>
+  <div class="cards">
+
+    <a class="card" href="./student-study-planning-agent/">
+      <div class="card-banner">🤖</div>
+      <div class="card-body">
+        <h3>Build a Student Study Planning Agent</h3>
+        <p>Learn to build a real AI Agent using Google ADK and Gemini. Add tools, manage session state, and orchestrate a multi-step workflow.</p>
+      </div>
+      <div class="card-footer">
+        <span>⏱ 60 min</span>
+        <span class="tag">Google ADK</span>
+        <span class="tag">Gemini</span>
+        <span class="tag">Python</span>
+      </div>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  Built by <a href="https://gdg.community.dev/gdg-on-campus-university-of-information-technology-ho-chi-minh-city-vietnam/">GDGoC-UIT</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/eiyuumiru/student-study-agent-codelab">GitHub</a>
+</footer>
+
+</body>
+</html>
