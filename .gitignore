@@ -29,9 +29,6 @@ claat.exe
 # claat — downloaded SVG (re-downloaded by publish.sh)
 open-btn.svg
 
-# claat — root-level export output (publish.sh moves this to docs/)
-student-study-planning-agent/
-
 # Source documents — not for public hosting
 docs/*.pdf
 docs/*.docx

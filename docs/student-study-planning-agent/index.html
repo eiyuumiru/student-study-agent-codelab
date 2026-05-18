@@ -1,0 +1,607 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Build a Student Study Planning Agent with Google ADK</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid="UA-XXXXXXXX-X"
+                  id="student-study-planning-agent"
+                  title="Build a Student Study Planning Agent with Google ADK"
+                  environment="web"
+                  feedback-link="https://github.com/eiyuumiru/student-study-agent-codelab/issues">
+    
+      <google-codelab-step label="Overview" duration="2">
+        <p>In this codelab, you will build a <strong>Student Study Planning Agent</strong> — a smart assistant that helps students manage their study schedule by checking deadlines, remembering context, and generating personalized study plans.</p>
+<h2 class="checklist" is-upgraded>What you&#39;ll learn</h2>
+<ul class="checklist">
+<li>The difference between a chatbot and an AI Agent</li>
+<li>How to build an agent with <strong>Google ADK</strong> and <strong>Gemini</strong></li>
+<li>How to give your agent <strong>Tools</strong> to interact with real data</li>
+<li>How to use <strong>Session State</strong> to give your agent memory within a conversation</li>
+<li>How to design a <strong>multi-step Workflow</strong> for complex tasks</li>
+<li>(Bonus) How to connect your agent to <strong>Google&#39;s MCP servers</strong> (Calendar, Docs, Drive)</li>
+</ul>
+<h2 is-upgraded>What you&#39;ll build</h2>
+<p>By the end of this codelab, your agent will be able to handle a conversation like this:</p>
+<pre><code>You:   &#34;I&#39;m most worried about my NLP assignment.&#34;
+Agent: &#34;Got it! I&#39;ll keep NLP as your priority.&#34;
+
+You:   &#34;How many days do I have left?&#34;
+Agent: [calls get_priority_subject → NLP]
+       [calls get_subject_deadline → 2026-05-25]
+       [calls calculate_days_remaining → 2 days, status: critical]
+       &#34;You have 2 days until your NLP deadline. Let&#39;s make them count!&#34;
+
+You:   &#34;Create a study plan for tonight.&#34;
+Agent: [calls create_study_plan → HIGH urgency plan]
+       &#34;Here&#39;s your plan: Tonight: 2h on NLP fundamentals...&#34;
+</code></pre>
+<h2 is-upgraded>Architecture</h2>
+<pre><code>+-----------------------------------------------+
+|               AI Agent (ADK)                  |
+|                                               |
+|  +-----------+  +----------+  +------------+  |
+|  |  Gemini   |  |  Tools   |  |  Session   |  |
+|  |  Model    |  | (Python) |  |   State    |  |
+|  +-----------+  +----------+  +------------+  |
++-----------------------------------------------+
+       ^                  |
+       | prompt           | tool calls
+       |                  v
+  +----------+     +-------------+
+  |   User   |     |  Mock Data  |
+  | (adk web)|     | (deadlines) |
+  +----------+     +-------------+
+</code></pre>
+<h2 is-upgraded>Prerequisites</h2>
+<ul>
+<li>A Google account (for Gemini API key and Cloud Shell)</li>
+<li>Basic Python knowledge (functions, dicts, imports)</li>
+<li>A modern web browser — no local installation needed</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 1: Setup Your Environment" duration="10">
+        <p>Everything in this codelab runs in <strong>Google Cloud Shell</strong> — a free, browser-based Linux environment with Python pre-installed. No local setup needed.</p>
+<h2 is-upgraded>1.1 Claim your Google Cloud credit</h2>
+<p>Your event organizer has provided Google Cloud credits. Claim them at:</p>
+<pre><code>https://trygcp.dev/claim/deveco-gdg-xxxxxxxx
+</code></pre>
+<p>Replace <code>xxxxxxxx</code> with the code provided at the event. This gives you access to Google Cloud and the Gemini API.</p>
+<h2 is-upgraded>1.2 Get a Gemini API key</h2>
+<ol type="1">
+<li>Go to <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a></li>
+<li>Click <strong>Create API key</strong> → select your Google Cloud project</li>
+<li>Copy the key — you&#39;ll use it in step 1.4</li>
+</ol>
+<aside class="special"><p><strong>Free tier:</strong> The Gemini API has a generous free tier. You won&#39;t need to spend credits for this codelab. </p>
+</aside>
+<h2 is-upgraded>1.3 Open the starter code in Cloud Shell</h2>
+<p>Click the button below to open Google Cloud Shell with the starter code pre-loaded:</p>
+<p><a href="https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/eiyuumiru/student-study-agent-codelab&cloudshell_git_branch=starter&cloudshell_tutorial=TUTORIAL.md&show=terminal" target="_blank"><img alt="Open in Cloud Shell" src="img\\ab3dedb7a31972fe.svg"></a></p>
+<p>This will:</p>
+<ol type="1">
+<li>Open Cloud Shell in your browser</li>
+<li>Automatically clone the starter repo</li>
+<li>Change into the <code>starter/</code> directory</li>
+</ol>
+<aside class="warning"><p><strong>First time using Cloud Shell?</strong> It may take 30–60 seconds to provision. Accept any prompts to authorize Cloud Shell. </p>
+</aside>
+<h2 is-upgraded>1.4 Install dependencies and configure your API key</h2>
+<p>In the Cloud Shell terminal, run:</p>
+<pre><code language="language-bash" class="language-bash">pip install -r requirements.txt
+</code></pre>
+<p>Then set your Gemini API key:</p>
+<pre><code language="language-bash" class="language-bash">export GOOGLE_API_KEY=&#34;your_actual_api_key_here&#34;
+</code></pre>
+<p>Paste the key you copied from Google AI Studio. The quotes are important.</p>
+<h2 is-upgraded>1.5 Verify your setup</h2>
+<p>Run the ADK web UI:</p>
+<pre><code language="language-bash" class="language-bash">adk web
+</code></pre>
+<p>Cloud Shell will show a notification: <strong>&#34;Web Preview on port 8000&#34;</strong>. Click <strong>&#34;Open in new tab&#34;</strong> (or the web preview button in the Cloud Shell toolbar).</p>
+<p>You should see the ADK interface. Select <strong>study_agent</strong> from the dropdown.</p>
+<aside class="warning"><p><strong>Troubleshooting:</strong> If you see <code>ModuleNotFoundError: No module named 'study_agent'</code>, make sure you&#39;re in the repo root: run <code>cd ~/student-study-agent-codelab</code> then try again. </p>
+</aside>
+<aside class="special"><p><strong>Keep Cloud Shell open</strong> throughout the codelab. Each time you edit a file, stop <code>adk web</code> with <code>Ctrl+C</code>, save your changes, then run <code>adk web</code> again to reload. </p>
+</aside>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 2: Your First Agent" duration="5">
+        <p>Open <code>study_agent/agent.py</code>. You&#39;ll see the agent is already defined:</p>
+<pre><code language="language-python" class="language-python">from google.adk.agents import Agent
+
+root_agent = Agent(
+    name=&#34;study_agent&#34;,
+    model=&#34;gemini-2.0-flash&#34;,
+    description=&#34;A student study planning assistant.&#34;,
+    instruction=&#34;You are a helpful study assistant for students.&#34;,
+)
+</code></pre>
+<h2 is-upgraded>What each field does</h2>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Field</p>
+</td><td colspan="1" rowspan="1"><p>Purpose</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>name</code></p>
+</td><td colspan="1" rowspan="1"><p>Identifier for the agent (used by ADK internally)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>model</code></p>
+</td><td colspan="1" rowspan="1"><p>The Gemini model to use for reasoning</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>description</code></p>
+</td><td colspan="1" rowspan="1"><p>Helps ADK route requests in multi-agent setups</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>instruction</code></p>
+</td><td colspan="1" rowspan="1"><p>The system prompt — defines the agent&#39;s personality and behavior</p>
+</td></tr>
+</table>
+<h2 is-upgraded>Try it out</h2>
+<p>In the ADK web UI, type:</p>
+<pre><code>What subjects should I study for a computer science degree?
+</code></pre>
+<p>The agent responds using Gemini&#39;s knowledge. But notice — it can&#39;t tell you <em>your</em> actual deadlines. It&#39;s just a chatbot at this point.</p>
+<h2 is-upgraded>The key insight</h2>
+<pre><code>LLM alone:  User asks → Model generates text → Done
+AI Agent:   User asks → Model reasons → Calls tools → Uses state → Responds
+</code></pre>
+<p>In the next steps, we&#39;ll transform this chatbot into a real agent.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 3: Adding Tools — The Agent Gains Abilities" duration="15">
+        <p>Tools are regular Python functions that your agent can call when it needs to perform an action or retrieve real data. The agent reads the <strong>docstring</strong> to decide when and how to use each tool.</p>
+<p>Open <code>study_agent/tools.py</code>.</p>
+<h2 is-upgraded>3.1 Implement <code>get_current_time</code></h2>
+<pre><code language="language-python" class="language-python">from datetime import datetime
+
+def get_current_time() -&gt; dict:
+    &#34;&#34;&#34;Returns the current date and time.&#34;&#34;&#34;
+    now = datetime.now()
+    return {
+        &#34;current_time&#34;: now.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;),
+        &#34;date&#34;: now.strftime(&#34;%Y-%m-%d&#34;),
+    }
+</code></pre>
+<h2 is-upgraded>3.2 Implement <code>get_subject_deadline</code></h2>
+<pre><code language="language-python" class="language-python">def get_subject_deadline(subject: str) -&gt; dict:
+    &#34;&#34;&#34;Gets the assignment or exam deadline for a given subject.
+
+    Args:
+        subject: The name of the subject (e.g., &#39;NLP&#39;, &#39;Machine Learning&#39;).
+    &#34;&#34;&#34;
+    deadlines = {
+        &#34;NLP&#34;: &#34;2026-05-25&#34;,
+        &#34;Machine Learning&#34;: &#34;2026-05-28&#34;,
+        &#34;Data Structures and Algorithms&#34;: &#34;2026-06-01&#34;,
+        &#34;Artificial Intelligence&#34;: &#34;2026-06-09&#34;,
+    }
+    subject_key = next((k for k in deadlines if k.lower() == subject.lower()), None)
+    if subject_key:
+        return {&#34;subject&#34;: subject_key, &#34;deadline&#34;: deadlines[subject_key], &#34;found&#34;: True}
+    return {
+        &#34;subject&#34;: subject,
+        &#34;deadline&#34;: None,
+        &#34;found&#34;: False,
+        &#34;available_subjects&#34;: list(deadlines.keys()),
+    }
+</code></pre>
+<h2 is-upgraded>3.3 Implement <code>calculate_days_remaining</code></h2>
+<pre><code language="language-python" class="language-python">def calculate_days_remaining(deadline_date: str) -&gt; dict:
+    &#34;&#34;&#34;Calculates how many days remain until a given deadline date.
+
+    Args:
+        deadline_date: The deadline in YYYY-MM-DD format.
+    &#34;&#34;&#34;
+    deadline = datetime.strptime(deadline_date, &#34;%Y-%m-%d&#34;)
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    days = (deadline - today).days
+
+    if days &lt; 0:
+        status = &#34;overdue&#34;
+    elif days == 0:
+        status = &#34;due_today&#34;
+    elif days &lt;= 3:
+        status = &#34;critical&#34;
+    elif days &lt;= 7:
+        status = &#34;urgent&#34;
+    else:
+        status = &#34;normal&#34;
+
+    return {&#34;days_remaining&#34;: days, &#34;deadline&#34;: deadline_date, &#34;status&#34;: status}
+</code></pre>
+<h2 is-upgraded>3.4 Register the tools with your agent</h2>
+<p>Update <code>agent.py</code> to import and use the tools:</p>
+<pre><code language="language-python" class="language-python">from google.adk.agents import Agent
+from .tools import get_current_time, get_subject_deadline, calculate_days_remaining
+
+root_agent = Agent(
+    name=&#34;study_agent&#34;,
+    model=&#34;gemini-2.0-flash&#34;,
+    description=&#34;A student study planning assistant.&#34;,
+    instruction=&#34;You are a helpful study assistant. Always use tools to get accurate data — never guess dates or deadlines.&#34;,
+    tools=[
+        get_current_time,
+        get_subject_deadline,
+        calculate_days_remaining,
+    ],
+)
+</code></pre>
+<h2 is-upgraded>3.5 Test your tools</h2>
+<p>Restart <code>adk web</code> and try these prompts:</p>
+<pre><code>What time is it right now?
+</code></pre>
+<pre><code>When is the deadline for NLP?
+</code></pre>
+<pre><code>How many days do I have until my Machine Learning deadline?
+</code></pre>
+<p>In the ADK web UI, you can expand each response to see exactly which tool was called and what it returned.</p>
+<aside class="special"><p><strong>Why docstrings matter:</strong> Gemini reads your function&#39;s docstring and type hints to decide when to call it. A clear, descriptive docstring = a smarter agent. </p>
+</aside>
+<h2 is-upgraded>Checkpoint ✓</h2>
+<p>Your agent should now:</p>
+<ul>
+<li>Return the current time accurately</li>
+<li>Look up deadlines from mock data</li>
+<li>Calculate days remaining with a status label</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 4: Session State — The Agent Gets Memory" duration="15">
+        <p>Right now, if you tell the agent &#34;I&#39;m worried about NLP&#34; and then ask &#34;how many days do I have?&#34;, it won&#39;t know you meant NLP. Each message is processed independently.</p>
+<p><strong>Session State</strong> solves this. It&#39;s a dictionary that persists across all turns in a conversation session.</p>
+<h2 is-upgraded>4.1 Understanding ToolContext</h2>
+<p>ADK passes a special <code>ToolContext</code> object to any tool that declares it as a parameter. Through <code>tool_context.state</code>, your tool can read and write to the session&#39;s persistent state.</p>
+<pre><code>Turn 1: &#34;I&#39;m worried about NLP&#34;
+         → save_priority_subject(&#34;NLP&#34;) writes to state[&#34;priority_subject&#34;]
+
+Turn 2: &#34;How many days do I have?&#34;
+         → get_priority_subject() reads state[&#34;priority_subject&#34;] → &#34;NLP&#34;
+         → get_subject_deadline(&#34;NLP&#34;) → deadline
+         → calculate_days_remaining(deadline) → 2 days
+</code></pre>
+<h2 is-upgraded>4.2 Add state tools to <code>tools.py</code></h2>
+<p>Uncomment and implement the state tools:</p>
+<pre><code language="language-python" class="language-python">from google.adk.tools import ToolContext
+
+def save_priority_subject(subject: str, tool_context: ToolContext) -&gt; dict:
+    &#34;&#34;&#34;Saves the student&#39;s most important/priority subject to remember for this session.
+
+    Args:
+        subject: The subject name the student is most concerned about.
+    &#34;&#34;&#34;
+    tool_context.state[&#34;priority_subject&#34;] = subject
+    return {
+        &#34;saved&#34;: True,
+        &#34;priority_subject&#34;: subject,
+        &#34;message&#34;: f&#34;Got it! I&#39;ll remember that {subject} is your priority.&#34;,
+    }
+
+
+def get_priority_subject(tool_context: ToolContext) -&gt; dict:
+    &#34;&#34;&#34;Retrieves the student&#39;s previously saved priority subject from session memory.&#34;&#34;&#34;
+    subject = tool_context.state.get(&#34;priority_subject&#34;)
+    if subject:
+        return {&#34;priority_subject&#34;: subject, &#34;found&#34;: True}
+    return {
+        &#34;priority_subject&#34;: None,
+        &#34;found&#34;: False,
+        &#34;message&#34;: &#34;No priority subject saved yet.&#34;,
+    }
+</code></pre>
+<h2 is-upgraded>4.3 Register the state tools in <code>agent.py</code></h2>
+<pre><code language="language-python" class="language-python">from .tools import (
+    calculate_days_remaining,
+    get_current_time,
+    get_priority_subject,
+    get_subject_deadline,
+    save_priority_subject,
+)
+
+root_agent = Agent(
+    name=&#34;study_agent&#34;,
+    model=&#34;gemini-2.0-flash&#34;,
+    description=&#34;A student study planning assistant.&#34;,
+    instruction=&#34;You are a helpful study assistant. When a student mentions they are worried about a subject, use save_priority_subject to remember it. Always use tools to get accurate data.&#34;,
+    tools=[
+        get_current_time,
+        get_subject_deadline,
+        calculate_days_remaining,
+        save_priority_subject,
+        get_priority_subject,
+    ],
+)
+</code></pre>
+<h2 is-upgraded>4.4 Test session state</h2>
+<p>Restart <code>adk web</code> and try this multi-turn conversation <strong>in the same session</strong>:</p>
+<pre><code>Turn 1: &#34;I&#39;m most worried about my NLP assignment.&#34;
+Turn 2: &#34;How many days do I have left for that subject?&#34;
+Turn 3: &#34;What about Machine Learning?&#34;
+Turn 4: &#34;Which subject did I say I was most worried about?&#34;
+</code></pre>
+<p>Watch how the agent uses <code>save_priority_subject</code> on Turn 1, then <code>get_priority_subject</code> on Turn 2 to resolve &#34;that subject&#34; without you repeating yourself.</p>
+<aside class="special"><p><strong>Stateless vs Stateful:<br></strong> A <strong>chatbot</strong> treats every message independently — it has no memory between turns.<br> An <strong>AI Agent</strong> maintains state across turns — it builds context over the conversation. </p>
+</aside>
+<h2 is-upgraded>Checkpoint ✓</h2>
+<p>Your agent should now:</p>
+<ul>
+<li>Remember which subject you&#39;re most worried about</li>
+<li>Use that memory to answer follow-up questions without you repeating yourself</li>
+<li>Correctly update the priority when you mention a new subject</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 5: Workflow — The Agent Orchestrates Multiple Steps" duration="10">
+        <p>So far, the agent answers one question at a time. But a real study planning request — &#34;create a study plan for tonight&#34; — requires multiple steps in sequence:</p>
+<pre><code>1. Check priority subject from state
+2. Get the deadline for that subject
+3. Calculate days remaining
+4. Generate a plan based on urgency
+</code></pre>
+<p>This is a <strong>workflow</strong>: a task that the agent breaks down and executes across multiple tool calls.</p>
+<h2 is-upgraded>5.1 Add the <code>create_study_plan</code> tool to <code>tools.py</code></h2>
+<pre><code language="language-python" class="language-python">def create_study_plan(subject: str, days_remaining: int, tool_context: ToolContext) -&gt; dict:
+    &#34;&#34;&#34;Creates a personalized study plan based on the subject and days remaining until deadline.
+
+    Args:
+        subject: The subject to create a plan for.
+        days_remaining: Number of days until the deadline.
+    &#34;&#34;&#34;
+    if days_remaining &lt; 0:
+        urgency = &#34;OVERDUE&#34;
+        sessions = [
+            &#34;Contact your professor immediately about the missed deadline.&#34;,
+            &#34;Complete the work as soon as possible.&#34;,
+        ]
+    elif days_remaining == 0:
+        urgency = &#34;DUE TODAY&#34;
+        sessions = [&#34;Focus entirely on this subject right now.&#34;]
+    elif days_remaining &lt;= 3:
+        urgency = &#34;CRITICAL&#34;
+        sessions = [
+            f&#34;Tonight: 3h deep focus on {subject} core concepts&#34;,
+            &#34;Tomorrow: 2h practice problems + review notes&#34;,
+            &#34;Day before deadline: 1h final review, no new material&#34;,
+        ]
+    elif days_remaining &lt;= 7:
+        urgency = &#34;HIGH&#34;
+        sessions = [
+            f&#34;Tonight: 2h study {subject} fundamentals&#34;,
+            &#34;Next 2 days: 1.5h/day on practice problems&#34;,
+            &#34;Day 4–5: 1h/day review and consolidation&#34;,
+            &#34;Day before deadline: Light review only&#34;,
+        ]
+    else:
+        urgency = &#34;NORMAL&#34;
+        sessions = [
+            &#34;Daily: 1h focused study sessions&#34;,
+            &#34;Week 1: Cover all main topics&#34;,
+            &#34;Week 2: Practice and review&#34;,
+            &#34;Final days: Mock tests and revision&#34;,
+        ]
+
+    plan = {
+        &#34;subject&#34;: subject,
+        &#34;days_remaining&#34;: days_remaining,
+        &#34;urgency&#34;: urgency,
+        &#34;study_sessions&#34;: sessions,
+        &#34;tip&#34;: &#34;Take a 10-minute break every 50 minutes (Pomodoro technique).&#34;,
+    }
+    tool_context.state[&#34;last_study_plan&#34;] = plan
+    return plan
+</code></pre>
+<h2 is-upgraded>5.2 Update the agent instruction and tools in <code>agent.py</code></h2>
+<p>The instruction is the agent&#39;s &#34;system design&#34; — it tells the agent <em>how</em> to orchestrate its tools:</p>
+<pre><code language="language-python" class="language-python">INSTRUCTION = &#34;&#34;&#34;You are a helpful and encouraging study planning assistant for university students.
+
+When a student mentions they are worried about or focused on a subject, use save_priority_subject to remember it.
+
+When asked about deadlines or time remaining, always use tools to get accurate data — never guess dates.
+
+When creating a study plan, follow these steps in order:
+1. Check if there is a saved priority subject (use get_priority_subject)
+2. If no priority subject is saved, ask the student which subject they need help with
+3. Get the deadline for that subject (use get_subject_deadline)
+4. Calculate days remaining (use calculate_days_remaining)
+5. Create the study plan (use create_study_plan)
+
+Always be encouraging, specific, and realistic in your recommendations.
+&#34;&#34;&#34;
+
+root_agent = Agent(
+    name=&#34;study_agent&#34;,
+    model=&#34;gemini-2.0-flash&#34;,
+    description=&#34;A student study planning assistant.&#34;,
+    instruction=INSTRUCTION,
+    tools=[
+        get_current_time,
+        get_subject_deadline,
+        calculate_days_remaining,
+        save_priority_subject,
+        get_priority_subject,
+        create_study_plan,
+    ],
+)
+</code></pre>
+<h2 is-upgraded>5.3 Test the full workflow</h2>
+<p>Restart <code>adk web</code> and run this complete scenario:</p>
+<pre><code>Turn 1: &#34;I&#39;m most worried about NLP.&#34;
+Turn 2: &#34;Create a study plan for tonight.&#34;
+</code></pre>
+<p>Watch the ADK web UI — you should see the agent make <strong>4 tool calls</strong> automatically:</p>
+<ol type="1">
+<li><code>get_priority_subject</code> → NLP</li>
+<li><code>get_subject_deadline("NLP")</code> → 2026-05-25</li>
+<li><code>calculate_days_remaining("2026-05-25")</code> → N days</li>
+<li><code>create_study_plan("NLP", N)</code> → personalized plan</li>
+</ol>
+<aside class="special"><p><strong>Why split into steps?</strong> Breaking complex tasks into discrete tool calls makes your agent more reliable, easier to debug, and easier to extend. Each tool does one thing well. </p>
+</aside>
+<h2 is-upgraded>Checkpoint ✓</h2>
+<p>Your agent should now:</p>
+<ul>
+<li>Automatically chain 4 tool calls to produce a study plan</li>
+<li>Adapt the plan based on urgency (CRITICAL vs HIGH vs NORMAL)</li>
+<li>Save the plan to state for future reference</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 6 (Bonus): Connect to Google MCP Servers" duration="5">
+        <aside class="special"><p><strong>This step is optional.</strong> It introduces concepts that require additional Google Cloud setup. The presenter will demo this live — you can follow along or explore it after the event. </p>
+</aside>
+<h2 is-upgraded>What is MCP?</h2>
+<p><strong>Model Context Protocol (MCP)</strong> is an open standard that lets AI agents connect to external services through a unified interface. Instead of writing custom API integrations, you connect to an MCP server and get a set of tools automatically.</p>
+<p>Google provides <strong>fully managed MCP servers</strong> for its services:</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>MCP Server</p>
+</td><td colspan="1" rowspan="1"><p>What it provides</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Google Workspace MCP</p>
+</td><td colspan="1" rowspan="1"><p>Gmail, Calendar, Docs, Sheets, Drive</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>BigQuery MCP</p>
+</td><td colspan="1" rowspan="1"><p>Query and analyze BigQuery datasets</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Firebase MCP</p>
+</td><td colspan="1" rowspan="1"><p>Interact with Firebase projects</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Cloud Monitoring MCP</p>
+</td><td colspan="1" rowspan="1"><p>Metrics, alerts, dashboards</p>
+</td></tr>
+</table>
+<h2 is-upgraded>Connecting to Google Workspace MCP</h2>
+<pre><code language="language-python" class="language-python">from google.adk.tools.mcp_tool import MCPToolset, SseServerParams
+
+workspace_toolset = MCPToolset(
+    connection_params=SseServerParams(
+        url=&#34;https://workspacemcp.googleapis.com/&#34;,
+    )
+)
+
+root_agent = Agent(
+    name=&#34;study_agent&#34;,
+    model=&#34;gemini-2.0-flash&#34;,
+    description=&#34;A student study planning assistant with calendar access.&#34;,
+    instruction=INSTRUCTION,
+    tools=[
+        # ... your existing tools ...
+        workspace_toolset,  # adds Calendar, Docs, Drive tools
+    ],
+)
+</code></pre>
+<p>With this connected, your agent could:</p>
+<ul>
+<li>Create a Google Calendar event for each study session</li>
+<li>Read your syllabus from Google Docs</li>
+<li>Save your study plan to Google Drive</li>
+</ul>
+<h2 is-upgraded>What you&#39;d need</h2>
+<ol type="1">
+<li>Enable the Google Calendar API in your Google Cloud project</li>
+<li>Set up OAuth 2.0 credentials (or use Application Default Credentials)</li>
+<li>Grant the MCP server access to your Google account</li>
+</ol>
+<aside class="special"><p><strong>Learn more:</strong> See the <a href="https://cloud.google.com/blog/products/ai-machine-learning/google-managed-mcp-servers-are-available-for-everyone" target="_blank">Google Managed MCP Servers announcement</a> for full setup instructions. </p>
+</aside>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Step 7: Summary &amp; What&#39;s Next" duration="3">
+        <h2 is-upgraded>What you built</h2>
+<p>You started with a plain chatbot and transformed it into a real AI Agent:</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Step</p>
+</td><td colspan="1" rowspan="1"><p>What you added</p>
+</td><td colspan="1" rowspan="1"><p>Concept</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Step 2</p>
+</td><td colspan="1" rowspan="1"><p>Basic agent with Gemini</p>
+</td><td colspan="1" rowspan="1"><p>LLM reasoning</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Step 3</p>
+</td><td colspan="1" rowspan="1"><p><code>get_current_time</code>, <code>get_subject_deadline</code>, <code>calculate_days_remaining</code></p>
+</td><td colspan="1" rowspan="1"><p>Tools</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Step 4</p>
+</td><td colspan="1" rowspan="1"><p><code>save_priority_subject</code>, <code>get_priority_subject</code></p>
+</td><td colspan="1" rowspan="1"><p>Session State</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Step 5</p>
+</td><td colspan="1" rowspan="1"><p><code>create_study_plan</code> + orchestration instruction</p>
+</td><td colspan="1" rowspan="1"><p>Workflow</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Step 6</p>
+</td><td colspan="1" rowspan="1"><p>Google Workspace MCP</p>
+</td><td colspan="1" rowspan="1"><p>External integrations</p>
+</td></tr>
+</table>
+<h2 is-upgraded>The core pattern</h2>
+<pre><code>AI Agent = LLM + Tools + State + Workflow
+</code></pre>
+<ul>
+<li><strong>LLM</strong> provides reasoning and language understanding</li>
+<li><strong>Tools</strong> give the agent access to real data and actions</li>
+<li><strong>State</strong> gives the agent memory within a session</li>
+<li><strong>Workflow</strong> lets the agent handle multi-step tasks autonomously</li>
+</ul>
+<h2 is-upgraded>Ideas to extend this project</h2>
+<ul>
+<li><strong>Wikipedia search tool</strong> — let the agent look up study material</li>
+<li><strong>Multi-agent system</strong> — one agent analyzes priorities, another creates the schedule</li>
+<li><strong>Persistent state</strong> — use <code>DatabaseSessionService</code> to remember across sessions</li>
+<li><strong>Google Calendar integration</strong> — automatically block study time on your calendar</li>
+<li><strong>Deploy to Cloud Run</strong> — make your agent accessible from anywhere</li>
+</ul>
+<h2 is-upgraded>Resources</h2>
+<ul>
+<li><a href="https://google.github.io/adk-docs/" target="_blank">Google ADK Documentation</a></li>
+<li><a href="https://aistudio.google.com/" target="_blank">Google AI Studio (get API keys)</a></li>
+<li><a href="https://cloud.google.com/blog/products/ai-machine-learning/google-managed-mcp-servers-are-available-for-everyone" target="_blank">Google Managed MCP Servers</a></li>
+<li><a href="https://github.com/eiyuumiru/student-study-agent-codelab" target="_blank">Codelab source code</a></li>
+<li><a href="https://gdg.community.dev/gdg-on-campus-university-of-information-technology-ho-chi-minh-city-vietnam/" target="_blank">GDGoC-UIT</a></li>
+</ul>
+<h2 is-upgraded>Keep building!</h2>
+<p>The agent you built today is a foundation. Real-world agents follow the same pattern — they just have more tools, richer state, and more sophisticated workflows. You now have the mental model to build them.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>

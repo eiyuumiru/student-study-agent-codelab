@@ -1,0 +1,32 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2026-05-18T09:14:41+07:00",
+  "id": "student-study-planning-agent",
+  "duration": 65,
+  "title": "Build a Student Study Planning Agent with Google ADK",
+  "authors": "GDGoC-UIT",
+  "summary": "Learn to build a real AI Agent using Google ADK. You’ll add tools, manage session state, and orchestrate a multi-step workflow — all powered by Gemini.",
+  "source": "codelab.md",
+  "theme": "",
+  "status": [
+    "published"
+  ],
+  "category": [
+    "ai",
+    "agenticai",
+    "googleadk"
+  ],
+  "tags": [
+    "ai-agent",
+    "gemini",
+    "google-adk",
+    "mcp",
+    "python"
+  ],
+  "feedback": "https://github.com/eiyuumiru/student-study-agent-codelab/issues",
+  "ga": "UA-XXXXXXXX-X",
+  "url": "student-study-planning-agent"
+}
