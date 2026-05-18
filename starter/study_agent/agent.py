@@ -22,7 +22,7 @@ Be encouraging and specific in your responses.
 # TODO (Step 4 & 5): Add save_priority_subject, get_priority_subject, create_study_plan
 root_agent = Agent(
     name="study_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite",
     description="A student study planning assistant that tracks deadlines and creates personalized study plans.",
     instruction=INSTRUCTION,
     tools=[

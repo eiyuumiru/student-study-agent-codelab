@@ -35,7 +35,7 @@ Always be encouraging, specific, and realistic in your recommendations.
 
 root_agent = Agent(
     name="study_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite",
     description="A student study planning assistant that tracks deadlines and creates personalized study plans.",
     instruction=INSTRUCTION,
     tools=[

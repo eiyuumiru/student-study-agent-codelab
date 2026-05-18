@@ -134,7 +134,7 @@ Agent: [calls create_study_plan → HIGH urgency plan]
 
 root_agent = Agent(
     name=&#34;study_agent&#34;,
-    model=&#34;gemini-2.0-flash&#34;,
+    model=&#34;gemini-3.1-flash-lite&#34;,
     description=&#34;A student study planning assistant.&#34;,
     instruction=&#34;You are a helpful study assistant for students.&#34;,
 )
@@ -239,7 +239,7 @@ from .tools import get_current_time, get_subject_deadline, calculate_days_remain
 
 root_agent = Agent(
     name=&#34;study_agent&#34;,
-    model=&#34;gemini-2.0-flash&#34;,
+    model=&#34;gemini-3.1-flash-lite&#34;,
     description=&#34;A student study planning assistant.&#34;,
     instruction=&#34;You are a helpful study assistant. Always use tools to get accurate data — never guess dates or deadlines.&#34;,
     tools=[
@@ -324,7 +324,7 @@ def get_priority_subject(tool_context: ToolContext) -&gt; dict:
 
 root_agent = Agent(
     name=&#34;study_agent&#34;,
-    model=&#34;gemini-2.0-flash&#34;,
+    model=&#34;gemini-3.1-flash-lite&#34;,
     description=&#34;A student study planning assistant.&#34;,
     instruction=&#34;You are a helpful study assistant. When a student mentions they are worried about a subject, use save_priority_subject to remember it. Always use tools to get accurate data.&#34;,
     tools=[
@@ -436,7 +436,7 @@ Always be encouraging, specific, and realistic in your recommendations.
 
 root_agent = Agent(
     name=&#34;study_agent&#34;,
-    model=&#34;gemini-2.0-flash&#34;,
+    model=&#34;gemini-3.1-flash-lite&#34;,
     description=&#34;A student study planning assistant.&#34;,
     instruction=INSTRUCTION,
     tools=[
@@ -508,7 +508,7 @@ workspace_toolset = MCPToolset(
 
 root_agent = Agent(
     name=&#34;study_agent&#34;,
-    model=&#34;gemini-2.0-flash&#34;,
+    model=&#34;gemini-3.1-flash-lite&#34;,
     description=&#34;A student study planning assistant with calendar access.&#34;,
     instruction=INSTRUCTION,
     tools=[

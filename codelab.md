@@ -162,7 +162,7 @@ from google.adk.agents import Agent
 
 root_agent = Agent(
     name="study_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite",
     description="A student study planning assistant.",
     instruction="You are a helpful study assistant for students.",
 )
@@ -282,7 +282,7 @@ from .tools import get_current_time, get_subject_deadline, calculate_days_remain
 
 root_agent = Agent(
     name="study_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite",
     description="A student study planning assistant.",
     instruction="You are a helpful study assistant. Always use tools to get accurate data — never guess dates or deadlines.",
     tools=[
@@ -389,7 +389,7 @@ from .tools import (
 
 root_agent = Agent(
     name="study_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite",
     description="A student study planning assistant.",
     instruction="You are a helpful study assistant. When a student mentions they are worried about a subject, use save_priority_subject to remember it. Always use tools to get accurate data.",
     tools=[
@@ -521,7 +521,7 @@ Always be encouraging, specific, and realistic in your recommendations.
 
 root_agent = Agent(
     name="study_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite",
     description="A student study planning assistant.",
     instruction=INSTRUCTION,
     tools=[
@@ -596,7 +596,7 @@ workspace_toolset = MCPToolset(
 
 root_agent = Agent(
     name="study_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite",
     description="A student study planning assistant with calendar access.",
     instruction=INSTRUCTION,
     tools=[
