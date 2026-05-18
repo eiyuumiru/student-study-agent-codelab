@@ -24,8 +24,11 @@ pip install -r requirements.txt
 # Set your Gemini API key
 export GOOGLE_API_KEY="your_key_here"
 
-# Run the agent web UI
-adk web
+# Confirm the key is set
+echo $GOOGLE_API_KEY
+
+# Run the agent web UI (Cloud Shell)
+adk web --allow_origins 'regex:https://.*.cloudshell.dev'
 
 # Then click "Web Preview" → "Preview on port 8000" in the Cloud Shell toolbar
 ```
