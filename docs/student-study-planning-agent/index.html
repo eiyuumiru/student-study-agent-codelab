@@ -116,7 +116,7 @@ Agent: [calls create_study_plan → HIGH urgency plan]
 <p>Paste the key you copied from Google AI Studio. The quotes are important.</p>
 <h2 is-upgraded>1.5 Verify your setup</h2>
 <p>Run the ADK web UI:</p>
-<pre><code language="language-bash" class="language-bash">adk web
+<pre><code language="language-bash" class="language-bash">adk web --allow_origins &#39;regex:https://.*.cloudshell.dev&#39;
 </code></pre>
 <p>Cloud Shell will show a notification: <strong>&#34;Web Preview on port 8000&#34;</strong>. Click <strong>&#34;Open in new tab&#34;</strong> (or the web preview button in the Cloud Shell toolbar).</p>
 <p>You should see the ADK interface. Select <strong>study_agent</strong> from the dropdown.</p>

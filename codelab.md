@@ -135,7 +135,7 @@ export GOOGLE_API_KEY="your_actual_api_key_here"
 Run the ADK web UI:
 
 ```bash
-adk web
+adk web --allow_origins 'regex:https://.*.cloudshell.dev'
 ```
 
 Cloud Shell will show a notification: **"Web Preview on port 8000"**. Click **"Open in new tab"** (or the web preview button in the Cloud Shell toolbar).
