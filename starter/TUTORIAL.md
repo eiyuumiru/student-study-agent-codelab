@@ -1,46 +1,109 @@
-# Student Study Planning Agent — Codelab
+# Student Study Planning Agent
 
-Welcome to the **GDGoC-UIT Build with AI** hands-on codelab!
+Welcome to the **GDGoC-UIT Build with AI** codelab!
 
-## You're in the right place
+## Setup — do this first
 
-Your Cloud Shell environment is ready. The starter code is already cloned in this directory.
-
-## Next steps
-
-1. **Open the codelab** in your browser — your event organizer will share the URL, or visit:
-   `https://eiyuumiru.github.io/student-study-agent-codelab/`
-
-2. **Follow Step 1** in the codelab to install dependencies and get your API key.
-
-3. **Come back here** to write code in each step.
-
-## Quick reference
+**1. Install dependencies**
 
 ```bash
-# Install dependencies (run once)
 pip install -r requirements.txt
+```
 
-# Set your Gemini API key
-export GOOGLE_API_KEY="your_key_here"
+**2. Get your Gemini API key** → [Google AI Studio](https://aistudio.google.com/apikey)  
+Click **Create API key**, then copy it.
 
-# Confirm the key is set
-echo $GOOGLE_API_KEY
+**3. Set the key**
 
-# Run the agent web UI (Cloud Shell)
+```bash
+export GOOGLE_API_KEY="paste_your_key_here"
+```
+
+**4. Start the agent UI**
+
+```bash
 adk web --allow_origins 'regex:https://.*.cloudshell.dev'
-
-# Then click "Web Preview" → "Preview on port 8000" in the Cloud Shell toolbar
 ```
 
-## File structure
+Click **Web Preview → Preview on port 8000** in the Cloud Shell toolbar above.
+
+---
+
+## Files you'll edit
 
 ```
-starter/
-├── study_agent/
-│   ├── agent.py    ← Edit this to add tools and update the agent
-│   └── tools.py    ← Implement the TODO functions here
-└── requirements.txt
+study_agent/
+├── agent.py    ← register tools, update the instruction
+└── tools.py    ← implement the TODO functions here
 ```
 
-Happy building!
+---
+
+## Step 3 — Add Tools
+
+Open `study_agent/tools.py` and implement the 3 `TODO` functions:
+
+- `get_current_time()` → return `{"current_time": "YYYY-MM-DD HH:MM:SS", "date": "YYYY-MM-DD"}`
+- `get_subject_deadline(subject)` → case-insensitive dict lookup, return found/not found
+- `calculate_days_remaining(deadline_date)` → compute days, return status: `overdue / due_today / critical / urgent / normal`
+
+Restart `adk web` and test:
+
+```
+What time is it right now?
+When is the NLP deadline?
+How many days until Machine Learning?
+```
+
+---
+
+## Step 4 — Session State
+
+In **`tools.py`**:
+1. Uncomment `from google.adk.tools import ToolContext` at the top
+2. Uncomment + implement `save_priority_subject` and `get_priority_subject`
+
+In **`agent.py`**:
+3. Uncomment `get_priority_subject` and `save_priority_subject` in the imports block
+4. Add both to the `tools=[...]` list
+
+Restart and test across two turns:
+
+```
+Turn 1: I'm most worried about my NLP assignment.
+Turn 2: How many days do I have left for that?
+```
+
+---
+
+## Step 5 — Study Plan
+
+In **`tools.py`**:
+1. Uncomment + implement `create_study_plan`
+   Return a plan dict based on urgency: `OVERDUE / DUE TODAY / CRITICAL / HIGH / NORMAL`
+   Also save it: `tool_context.state["last_study_plan"] = plan`
+
+In **`agent.py`**:
+2. Uncomment `create_study_plan` in imports + add to `tools=[...]`
+3. Expand `INSTRUCTION` to describe the 5-step workflow (check priority → get deadline → calc days → create plan)
+
+Restart and test the full flow:
+
+```
+Turn 1: I'm most worried about NLP.
+Turn 2: Create a study plan for tonight.
+```
+
+Watch the ADK UI — you should see 4 tool calls fire automatically.
+
+---
+
+## Troubleshooting
+
+```bash
+# ModuleNotFoundError? Make sure you're at the repo root:
+cd ~/student-study-agent-codelab
+
+# Restart adk web after every file save:
+# Ctrl+C  →  adk web --allow_origins 'regex:https://.*.cloudshell.dev'
+```

@@ -79,27 +79,17 @@ Duration: 10:00
 
 Everything in this codelab runs in **Google Cloud Shell** — a free, browser-based Linux environment with Python pre-installed. No local setup needed.
 
-### 1.1 Claim your Google Cloud credit
-
-Your event organizer has provided Google Cloud credits. Claim them at:
-
-```
-https://trygcp.dev/claim/deveco-gdg-xxxxxxxx
-```
-
-> Replace `xxxxxxxx` with the code provided at the event. This gives you access to Google Cloud and the Gemini API.
-
-### 1.2 Get a Gemini API key
+### 1.1 Get a Gemini API key
 
 1. Go to [Google AI Studio](https://aistudio.google.com/apikey)
 2. Click **Create API key** → select your Google Cloud project
-3. Copy the key — you'll use it in step 1.4
+3. Copy the key — you'll use it in step 1.3
 
 <aside class="positive">
 <strong>Free tier:</strong> The Gemini API has a generous free tier. You won't need to spend credits for this codelab.
 </aside>
 
-### 1.3 Open the starter code in Cloud Shell
+### 1.2 Open the starter code in Cloud Shell
 
 Click the button below to open Google Cloud Shell with the starter code pre-loaded:
 
@@ -114,7 +104,7 @@ This will:
 <strong>First time using Cloud Shell?</strong> It may take 30–60 seconds to provision. Accept any prompts to authorize Cloud Shell.
 </aside>
 
-### 1.4 Install dependencies and configure your API key
+### 1.3 Install dependencies and configure your API key
 
 In the Cloud Shell terminal, run:
 
@@ -130,7 +120,7 @@ export GOOGLE_API_KEY="your_actual_api_key_here"
 
 > Paste the key you copied from Google AI Studio. The quotes are important.
 
-### 1.5 Verify your setup
+### 1.4 Verify your setup
 
 Run the ADK web UI:
 

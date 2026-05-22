@@ -46,7 +46,7 @@ mv "$CODELAB_ID" "$DOCS_DIR/"
 
 # Replace hashed Cloud Shell button img with direct gstatic URL (avoids local path issues)
 echo "==> Fixing Cloud Shell button image..."
-sed -i 's|src="img[/\\][a-f0-9]*\.svg"|src="https://gstatic.com/cloudssh/images/open-btn.svg"|g' "$DOCS_DIR/$CODELAB_ID/index.html"
+sed -i -E 's|src="img[/\\]+[a-f0-9]*\.svg"|src="https://gstatic.com/cloudssh/images/open-btn.svg"|g' "$DOCS_DIR/$CODELAB_ID/index.html"
 
 echo "==> Done! Output: $DOCS_DIR/$CODELAB_ID/index.html"
 echo ""
