@@ -87,7 +87,7 @@ In **`tools.py`**:
 
 In **`agent.py`**:
 2. Uncomment `create_study_plan` in imports + add to `tools=[...]`
-3. Expand `INSTRUCTION` to describe the 5-step workflow (check priority → get deadline → calc days → create plan)
+3. Expand `INSTRUCTION` to describe the full workflow: resolve canonical name via `get_all_subjects` → check saved priority → get deadline → calc days → create plan
 
 Restart and test the full flow:
 

@@ -263,6 +263,8 @@ root_agent = Agent(
 <pre><code>How many days do I have until my Machine Learning deadline?
 </code></pre>
 <p>In the ADK web UI, you can expand each response to see exactly which tool was called and what it returned.</p>
+<aside class="special"><p><strong>Notice:</strong> For subject-related questions, the agent will call <code>get_all_subjects</code> first to get the canonical name, then call the next tool. You&#39;ll see 2 tool calls instead of 1 — this is correct behaviour. </p>
+</aside>
 <aside class="special"><p><strong>Why docstrings matter:</strong> Gemini reads your function&#39;s docstring and type hints to decide when to call it. A clear, descriptive docstring = a smarter agent. </p>
 </aside>
 <h2 is-upgraded>Checkpoint ✓</h2>
@@ -467,7 +469,13 @@ root_agent = Agent(
 <pre><code>Turn 1: &#34;I&#39;m most worried about NLP.&#34;
 Turn 2: &#34;Create a study plan for tonight.&#34;
 </code></pre>
-<p>Watch the ADK web UI — you should see the agent make <strong>4 tool calls</strong> automatically:</p>
+<p>Watch the ADK web UI — across both turns you should see:</p>
+<p><strong>Turn 1</strong> — 2 tool calls:</p>
+<ol type="1">
+<li><code>get_all_subjects</code> → canonical subject list</li>
+<li><code>save_priority_subject("NLP")</code> → saved to state</li>
+</ol>
+<p><strong>Turn 2</strong> — 4 tool calls:</p>
 <ol type="1">
 <li><code>get_priority_subject</code> → NLP</li>
 <li><code>get_subject_deadline("NLP")</code> → 2026-05-25</li>
@@ -479,7 +487,8 @@ Turn 2: &#34;Create a study plan for tonight.&#34;
 <h2 is-upgraded>Checkpoint ✓</h2>
 <p>Your agent should now:</p>
 <ul>
-<li>Automatically chain 4 tool calls to produce a study plan</li>
+<li>Resolve any subject name (in any language) to its canonical form via <code>get_all_subjects</code></li>
+<li>Automatically chain 4 tool calls in Turn 2 to produce a study plan</li>
 <li>Adapt the plan based on urgency (CRITICAL vs HIGH vs NORMAL)</li>
 <li>Save the plan to state for future reference</li>
 </ul>

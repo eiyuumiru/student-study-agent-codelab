@@ -315,6 +315,10 @@ How many days do I have until my Machine Learning deadline?
 In the ADK web UI, you can expand each response to see exactly which tool was called and what it returned.
 
 <aside class="positive">
+<strong>Notice:</strong> For subject-related questions, the agent will call <code>get_all_subjects</code> first to get the canonical name, then call the next tool. You'll see 2 tool calls instead of 1 — this is correct behaviour.
+</aside>
+
+<aside class="positive">
 <strong>Why docstrings matter:</strong> Gemini reads your function's docstring and type hints to decide when to call it. A clear, descriptive docstring = a smarter agent.
 </aside>
 
@@ -557,7 +561,13 @@ Turn 1: "I'm most worried about NLP."
 Turn 2: "Create a study plan for tonight."
 ```
 
-Watch the ADK web UI — you should see the agent make **4 tool calls** automatically:
+Watch the ADK web UI — across both turns you should see:
+
+**Turn 1** — 2 tool calls:
+1. `get_all_subjects` → canonical subject list
+2. `save_priority_subject("NLP")` → saved to state
+
+**Turn 2** — 4 tool calls:
 1. `get_priority_subject` → NLP
 2. `get_subject_deadline("NLP")` → 2026-05-25
 3. `calculate_days_remaining("2026-05-25")` → N days
@@ -570,7 +580,8 @@ Watch the ADK web UI — you should see the agent make **4 tool calls** automati
 ### Checkpoint ✓
 
 Your agent should now:
-- Automatically chain 4 tool calls to produce a study plan
+- Resolve any subject name (in any language) to its canonical form via `get_all_subjects`
+- Automatically chain 4 tool calls in Turn 2 to produce a study plan
 - Adapt the plan based on urgency (CRITICAL vs HIGH vs NORMAL)
 - Save the plan to state for future reference
 
