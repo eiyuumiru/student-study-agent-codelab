@@ -96,8 +96,8 @@ Agent: [calls create_study_plan → HIGH urgency plan]
 <p>This will:</p>
 <ol type="1">
 <li>Open Cloud Shell in your browser</li>
-<li>Automatically clone the starter repo</li>
-<li>Change into the <code>starter/</code> directory</li>
+<li>Automatically clone the starter repo into <code>~/student-study-agent-codelab/</code></li>
+<li>Open the tutorial sidebar on the right</li>
 </ol>
 <aside class="warning"><p><strong>First time using Cloud Shell?</strong> It may take 30–60 seconds to provision. Accept any prompts to authorize Cloud Shell. </p>
 </aside>
@@ -169,6 +169,22 @@ AI Agent:   User asks → Model reasons → Calls tools → Uses state → Respo
       <google-codelab-step label="Step 3: Adding Tools — The Agent Gains Abilities" duration="15">
         <p>Tools are regular Python functions that your agent can call when it needs to perform an action or retrieve real data. The agent reads the <strong>docstring</strong> to decide when and how to use each tool.</p>
 <p>Open <code>study_agent/tools.py</code>.</p>
+<h2 is-upgraded>Pre-built: <code>SUBJECT_DEADLINES</code> and <code>get_all_subjects</code></h2>
+<p>At the top of <code>tools.py</code> you&#39;ll find these two already written for you:</p>
+<pre><code language="language-python" class="language-python">SUBJECT_DEADLINES = {
+    &#34;NLP&#34;: &#34;2026-05-25&#34;,
+    &#34;Machine Learning&#34;: &#34;2026-05-28&#34;,
+    &#34;Data Structures and Algorithms&#34;: &#34;2026-06-01&#34;,
+    &#34;Artificial Intelligence&#34;: &#34;2026-06-09&#34;,
+}
+
+def get_all_subjects() -&gt; dict:
+    &#34;&#34;&#34;Returns the list of all subjects that have deadlines tracked.
+    Always call this first when the user mentions a subject, to get the exact canonical name.
+    &#34;&#34;&#34;
+    return {&#34;subjects&#34;: list(SUBJECT_DEADLINES.keys())}
+</code></pre>
+<p><strong>Why does this exist?</strong> This is a key design pattern for agents: the LLM should never <em>guess</em> what data exists — it should always <em>query</em> first. By calling <code>get_all_subjects()</code> before any subject lookup, the agent gets the exact canonical name and passes it correctly to other tools, regardless of what language or phrasing the user uses.</p>
 <h2 is-upgraded>3.1 Implement <code>get_current_time</code></h2>
 <pre><code language="language-python" class="language-python">from datetime import datetime
 
@@ -185,22 +201,16 @@ def get_current_time() -&gt; dict:
     &#34;&#34;&#34;Gets the assignment or exam deadline for a given subject.
 
     Args:
-        subject: The name of the subject (e.g., &#39;NLP&#39;, &#39;Machine Learning&#39;).
+        subject: The exact subject name from get_all_subjects().
     &#34;&#34;&#34;
-    deadlines = {
-        &#34;NLP&#34;: &#34;2026-05-25&#34;,
-        &#34;Machine Learning&#34;: &#34;2026-05-28&#34;,
-        &#34;Data Structures and Algorithms&#34;: &#34;2026-06-01&#34;,
-        &#34;Artificial Intelligence&#34;: &#34;2026-06-09&#34;,
-    }
-    subject_key = next((k for k in deadlines if k.lower() == subject.lower()), None)
+    subject_key = next((k for k in SUBJECT_DEADLINES if k.lower() == subject.lower()), None)
     if subject_key:
-        return {&#34;subject&#34;: subject_key, &#34;deadline&#34;: deadlines[subject_key], &#34;found&#34;: True}
+        return {&#34;subject&#34;: subject_key, &#34;deadline&#34;: SUBJECT_DEADLINES[subject_key], &#34;found&#34;: True}
     return {
         &#34;subject&#34;: subject,
         &#34;deadline&#34;: None,
         &#34;found&#34;: False,
-        &#34;available_subjects&#34;: list(deadlines.keys()),
+        &#34;available_subjects&#34;: list(SUBJECT_DEADLINES.keys()),
     }
 </code></pre>
 <h2 is-upgraded>3.3 Implement <code>calculate_days_remaining</code></h2>
@@ -228,16 +238,16 @@ def get_current_time() -&gt; dict:
     return {&#34;days_remaining&#34;: days, &#34;deadline&#34;: deadline_date, &#34;status&#34;: status}
 </code></pre>
 <h2 is-upgraded>3.4 Register the tools with your agent</h2>
-<p>Update <code>agent.py</code> to import and use the tools:</p>
-<pre><code language="language-python" class="language-python">from google.adk.agents import Agent
-from .tools import get_current_time, get_subject_deadline, calculate_days_remaining
+<p><code>agent.py</code> already imports and registers <code>get_all_subjects</code>, <code>get_current_time</code>, <code>get_subject_deadline</code>, and <code>calculate_days_remaining</code>. You don&#39;t need to change anything here — just confirm the tools list looks like this:</p>
+<pre><code language="language-python" class="language-python">from .tools import get_all_subjects, get_current_time, get_subject_deadline, calculate_days_remaining
 
 root_agent = Agent(
     name=&#34;study_agent&#34;,
     model=&#34;gemini-3.1-flash-lite&#34;,
     description=&#34;A student study planning assistant.&#34;,
-    instruction=&#34;You are a helpful study assistant. Always use tools to get accurate data — never guess dates or deadlines.&#34;,
+    instruction=INSTRUCTION,
     tools=[
+        get_all_subjects,
         get_current_time,
         get_subject_deadline,
         calculate_days_remaining,
@@ -310,10 +320,11 @@ def get_priority_subject(tool_context: ToolContext) -&gt; dict:
 </code></pre>
 <h2 is-upgraded>4.3 Register the state tools in <code>agent.py</code></h2>
 <pre><code language="language-python" class="language-python">from .tools import (
-    calculate_days_remaining,
+    get_all_subjects,
     get_current_time,
-    get_priority_subject,
     get_subject_deadline,
+    calculate_days_remaining,
+    get_priority_subject,
     save_priority_subject,
 )
 
@@ -321,8 +332,9 @@ root_agent = Agent(
     name=&#34;study_agent&#34;,
     model=&#34;gemini-3.1-flash-lite&#34;,
     description=&#34;A student study planning assistant.&#34;,
-    instruction=&#34;You are a helpful study assistant. When a student mentions they are worried about a subject, use save_priority_subject to remember it. Always use tools to get accurate data.&#34;,
+    instruction=INSTRUCTION,
     tools=[
+        get_all_subjects,
         get_current_time,
         get_subject_deadline,
         calculate_days_remaining,
@@ -415,13 +427,18 @@ Turn 4: &#34;Which subject did I say I was most worried about?&#34;
 <p>The instruction is the agent&#39;s &#34;system design&#34; — it tells the agent <em>how</em> to orchestrate its tools:</p>
 <pre><code language="language-python" class="language-python">INSTRUCTION = &#34;&#34;&#34;You are a helpful and encouraging study planning assistant for university students.
 
-When a student mentions they are worried about or focused on a subject, use save_priority_subject to remember it.
+Whenever the user mentions a subject name (in any language or form):
+1. Call get_all_subjects first to get the canonical subject list
+2. Match the user&#39;s mention to the exact name in the list
+3. Use only that exact canonical name when calling any other tool or saving state
+
+When a student mentions they are worried about or focused on a subject, use save_priority_subject to remember it (always with the canonical name from get_all_subjects).
 
 When asked about deadlines or time remaining, always use tools to get accurate data — never guess dates.
 
-When creating a study plan, follow these steps in order:
+When creating a study plan:
 1. Check if there is a saved priority subject (use get_priority_subject)
-2. If no priority subject is saved, ask the student which subject they need help with
+2. If not, ask the student which subject they need help with, then call get_all_subjects to resolve the canonical name
 3. Get the deadline for that subject (use get_subject_deadline)
 4. Calculate days remaining (use calculate_days_remaining)
 5. Create the study plan (use create_study_plan)
@@ -435,6 +452,7 @@ root_agent = Agent(
     description=&#34;A student study planning assistant.&#34;,
     instruction=INSTRUCTION,
     tools=[
+        get_all_subjects,
         get_current_time,
         get_subject_deadline,
         calculate_days_remaining,

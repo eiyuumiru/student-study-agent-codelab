@@ -97,8 +97,8 @@ Click the button below to open Google Cloud Shell with the starter code pre-load
 
 This will:
 1. Open Cloud Shell in your browser
-2. Automatically clone the starter repo
-3. Change into the `starter/` directory
+2. Automatically clone the starter repo into `~/student-study-agent-codelab/`
+3. Open the tutorial sidebar on the right
 
 <aside class="negative">
 <strong>First time using Cloud Shell?</strong> It may take 30–60 seconds to provision. Accept any prompts to authorize Cloud Shell.
