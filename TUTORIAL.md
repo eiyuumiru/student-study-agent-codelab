@@ -41,10 +41,12 @@ study_agent/
 
 ## Step 3 — Add Tools
 
+`get_all_subjects()` is already implemented for you — it returns the canonical list of subjects so the agent never has to guess names.
+
 Open `study_agent/tools.py` and implement the 3 `TODO` functions:
 
 - `get_current_time()` → return `{"current_time": "YYYY-MM-DD HH:MM:SS", "date": "YYYY-MM-DD"}`
-- `get_subject_deadline(subject)` → case-insensitive dict lookup, return found/not found
+- `get_subject_deadline(subject)` → case-insensitive lookup against `SUBJECT_DEADLINES`, return found/not found
 - `calculate_days_remaining(deadline_date)` → compute days, return status: `overdue / due_today / critical / urgent / normal`
 
 Restart `adk web` and test:

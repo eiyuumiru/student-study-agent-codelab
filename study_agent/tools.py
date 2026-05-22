@@ -3,8 +3,22 @@ from datetime import datetime
 # TODO (Step 3): Import ToolContext when you reach Step 4
 # from google.adk.tools import ToolContext
 
+SUBJECT_DEADLINES = {
+    "NLP": "2026-05-25",
+    "Machine Learning": "2026-05-28",
+    "Data Structures and Algorithms": "2026-06-01",
+    "Artificial Intelligence": "2026-06-09",
+}
+
 
 # Step 3 — Basic Tools
+
+def get_all_subjects() -> dict:
+    """Returns the list of all subjects that have deadlines tracked.
+    Always call this first when the user mentions a subject, to get the exact canonical name.
+    """
+    return {"subjects": list(SUBJECT_DEADLINES.keys())}
+
 
 def get_current_time() -> dict:
     """Returns the current date and time."""
@@ -17,15 +31,10 @@ def get_subject_deadline(subject: str) -> dict:
     """Gets the assignment or exam deadline for a given subject.
 
     Args:
-        subject: The name of the subject (e.g., 'NLP', 'Machine Learning').
+        subject: The exact subject name from get_all_subjects().
     """
-    deadlines = {
-        "NLP": "2026-05-25",
-        "Machine Learning": "2026-05-28",
-        "Data Structures and Algorithms": "2026-06-01",
-        "Artificial Intelligence": "2026-06-09",
-    }
-    # TODO: Case-insensitive lookup. Return {"subject": ..., "deadline": ..., "found": True/False}
+    # TODO: Case-insensitive lookup against SUBJECT_DEADLINES.
+    # Return {"subject": ..., "deadline": ..., "found": True/False}
     pass
 
 
