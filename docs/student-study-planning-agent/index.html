@@ -213,29 +213,14 @@ def get_all_subjects() -&gt; dict:
 <li>Parse the deadline string with <code>datetime.strptime(deadline_date, "%Y-%m-%d")</code></li>
 <li>Get today&#39;s date with <code>datetime.now()</code> — zero out the time part so the comparison is date-only</li>
 <li>Subtract: <code>(deadline - today).days</code> gives you the integer number of days</li>
-<li>Map the result to a status string using these thresholds:</li>
+<li>Map the result to a status string using these thresholds:<ul>
+<li><code>days < 0</code> → <code>"overdue"</code></li>
+<li><code>days == 0</code> → <code>"due_today"</code></li>
+<li><code>days <= 3</code> → <code>"critical"</code></li>
+<li><code>days <= 7</code> → <code>"urgent"</code></li>
+<li>else → <code>"normal"</code></li>
 </ul>
-<table>
-<tr><td colspan="1" rowspan="1"><p><code>days</code></p>
-</td><td colspan="1" rowspan="1"><p><code>status</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code>< 0</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"overdue"</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code>== 0</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"due_today"</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code><= 3</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"critical"</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code><= 7</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"urgent"</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code>> 7</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"normal"</code></p>
-</td></tr>
-</table>
-<ul>
+</li>
 <li>Return <code>{"days_remaining": int, "deadline": str, "status": str}</code></li>
 </ul>
 <h2 is-upgraded>3.4 Register the tools with your agent</h2>
@@ -297,15 +282,13 @@ Turn 2: &#34;How many days do I have?&#34;
 <p>First, uncomment the import at the top of <code>tools.py</code>:</p>
 <pre><code language="language-python" class="language-python">from google.adk.tools import ToolContext
 </code></pre>
-<p>Then implement the two functions. <strong>Hints:</strong></p>
-<p><strong><code>save_priority_subject</code></strong></p>
-<p><strong>:</strong></p>
+<p>Then implement the two functions.</p>
+<p>For <code>save_priority_subject</code>:</p>
 <ul>
 <li><code>tool_context.state</code> is a regular Python dict — store <code>subject</code> under a key like <code>"priority_subject"</code></li>
 <li>Return a dict confirming what was saved (include <code>"saved": True</code> and the subject name)</li>
 </ul>
-<p><strong><code>get_priority_subject</code></strong></p>
-<p><strong>:</strong></p>
+<p>For <code>get_priority_subject</code>:</p>
 <ul>
 <li>Read from <code>tool_context.state</code> using <code>.get()</code> so it doesn&#39;t crash if the key doesn&#39;t exist yet</li>
 <li>Return <code>{"priority_subject": ..., "found": True/False}</code> — include a helpful message when nothing is saved yet</li>
@@ -368,29 +351,14 @@ Turn 4: &#34;Which subject did I say I was most worried about?&#34;
 <p>Uncomment and implement <code>create_study_plan</code>.</p>
 <p><strong>Hints:</strong></p>
 <ul>
-<li>Use an <code>if/elif/else</code> ladder on <code>days_remaining</code> with these urgency levels:</li>
+<li>Use an <code>if/elif/else</code> ladder on <code>days_remaining</code> with these urgency levels:<ul>
+<li><code>days_remaining < 0</code> → <code>"OVERDUE"</code></li>
+<li><code>days_remaining == 0</code> → <code>"DUE TODAY"</code></li>
+<li><code>days_remaining <= 3</code> → <code>"CRITICAL"</code></li>
+<li><code>days_remaining <= 7</code> → <code>"HIGH"</code></li>
+<li>else → <code>"NORMAL"</code></li>
 </ul>
-<table>
-<tr><td colspan="1" rowspan="1"><p><code>days_remaining</code></p>
-</td><td colspan="1" rowspan="1"><p><code>urgency</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code>< 0</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"OVERDUE"</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code>== 0</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"DUE TODAY"</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code><= 3</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"CRITICAL"</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code><= 7</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"HIGH"</code></p>
-</td></tr>
-<tr><td colspan="1" rowspan="1"><p><code>> 7</code></p>
-</td><td colspan="1" rowspan="1"><p><code>"NORMAL"</code></p>
-</td></tr>
-</table>
-<ul>
+</li>
 <li>For each urgency level, create a list of <code>study_sessions</code> — concrete, time-specific actions the student should take</li>
 <li>Build a <code>plan</code> dict that includes at minimum: <code>"subject"</code>, <code>"days_remaining"</code>, <code>"urgency"</code>, <code>"study_sessions"</code></li>
 <li>Before returning, save the plan to state so it can be referenced later: <code>tool_context.state["last_study_plan"] = plan</code></li>

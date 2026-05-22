@@ -246,14 +246,11 @@ Fill in `calculate_days_remaining` in `tools.py`.
 - Get today's date with `datetime.now()` — zero out the time part so the comparison is date-only
 - Subtract: `(deadline - today).days` gives you the integer number of days
 - Map the result to a status string using these thresholds:
-
-| `days` | `status` |
-|--------|----------|
-| `< 0` | `"overdue"` |
-| `== 0` | `"due_today"` |
-| `<= 3` | `"critical"` |
-| `<= 7` | `"urgent"` |
-| `> 7` | `"normal"` |
+  - `days < 0` → `"overdue"`
+  - `days == 0` → `"due_today"`
+  - `days <= 3` → `"critical"`
+  - `days <= 7` → `"urgent"`
+  - else → `"normal"`
 
 - Return `{"days_remaining": int, "deadline": str, "status": str}`
 
@@ -342,13 +339,13 @@ First, uncomment the import at the top of `tools.py`:
 from google.adk.tools import ToolContext
 ```
 
-Then implement the two functions. **Hints:**
+Then implement the two functions.
 
-**`save_priority_subject`:**
+For `save_priority_subject`:
 - `tool_context.state` is a regular Python dict — store `subject` under a key like `"priority_subject"`
 - Return a dict confirming what was saved (include `"saved": True` and the subject name)
 
-**`get_priority_subject`:**
+For `get_priority_subject`:
 - Read from `tool_context.state` using `.get()` so it doesn't crash if the key doesn't exist yet
 - Return `{"priority_subject": ..., "found": True/False}` — include a helpful message when nothing is saved yet
 
@@ -428,14 +425,11 @@ Uncomment and implement `create_study_plan`.
 
 **Hints:**
 - Use an `if/elif/else` ladder on `days_remaining` with these urgency levels:
-
-| `days_remaining` | `urgency` |
-|-----------------|-----------|
-| `< 0` | `"OVERDUE"` |
-| `== 0` | `"DUE TODAY"` |
-| `<= 3` | `"CRITICAL"` |
-| `<= 7` | `"HIGH"` |
-| `> 7` | `"NORMAL"` |
+  - `days_remaining < 0` → `"OVERDUE"`
+  - `days_remaining == 0` → `"DUE TODAY"`
+  - `days_remaining <= 3` → `"CRITICAL"`
+  - `days_remaining <= 7` → `"HIGH"`
+  - else → `"NORMAL"`
 
 - For each urgency level, create a list of `study_sessions` — concrete, time-specific actions the student should take
 - Build a `plan` dict that includes at minimum: `"subject"`, `"days_remaining"`, `"urgency"`, `"study_sessions"`
