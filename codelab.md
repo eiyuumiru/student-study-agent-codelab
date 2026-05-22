@@ -218,64 +218,44 @@ def get_all_subjects() -> dict:
 
 ### 3.1 Implement `get_current_time`
 
-```python
-from datetime import datetime
+Open `study_agent/tools.py` and fill in the `get_current_time` function.
 
-def get_current_time() -> dict:
-    """Returns the current date and time."""
-    now = datetime.now()
-    return {
-        "current_time": now.strftime("%Y-%m-%d %H:%M:%S"),
-        "date": now.strftime("%Y-%m-%d"),
-    }
-```
+**Hints:**
+- Use `datetime.now()` to get the current moment
+- Use `.strftime(format)` to convert it to a string — you need two formats:
+  - `"%Y-%m-%d %H:%M:%S"` → full timestamp, e.g. `"2026-05-22 14:30:00"`
+  - `"%Y-%m-%d"` → date only, e.g. `"2026-05-22"`
+- Return a `dict` with keys `"current_time"` (full timestamp) and `"date"` (date only)
 
 ### 3.2 Implement `get_subject_deadline`
 
-```python
-def get_subject_deadline(subject: str) -> dict:
-    """Gets the assignment or exam deadline for a given subject.
+Fill in `get_subject_deadline` in `tools.py`.
 
-    Args:
-        subject: The exact subject name from get_all_subjects().
-    """
-    subject_key = next((k for k in SUBJECT_DEADLINES if k.lower() == subject.lower()), None)
-    if subject_key:
-        return {"subject": subject_key, "deadline": SUBJECT_DEADLINES[subject_key], "found": True}
-    return {
-        "subject": subject,
-        "deadline": None,
-        "found": False,
-        "available_subjects": list(SUBJECT_DEADLINES.keys()),
-    }
-```
+**Hints:**
+- `SUBJECT_DEADLINES` is the dict defined at the top of `tools.py` — look up the subject in it
+- Compare case-insensitively using `.lower()` on both the key and the argument
+- If found: return `{"subject": ..., "deadline": ..., "found": True}`
+- If not found: return `{"subject": ..., "deadline": None, "found": False}` — also include `"available_subjects"` so the agent knows what names are valid
 
 ### 3.3 Implement `calculate_days_remaining`
 
-```python
-def calculate_days_remaining(deadline_date: str) -> dict:
-    """Calculates how many days remain until a given deadline date.
+Fill in `calculate_days_remaining` in `tools.py`.
 
-    Args:
-        deadline_date: The deadline in YYYY-MM-DD format.
-    """
-    deadline = datetime.strptime(deadline_date, "%Y-%m-%d")
-    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    days = (deadline - today).days
+**Hints:**
+- Parse the deadline string with `datetime.strptime(deadline_date, "%Y-%m-%d")`
+- Get today's date with `datetime.now()` — zero out the time part so the comparison is date-only
+- Subtract: `(deadline - today).days` gives you the integer number of days
+- Map the result to a status string using these thresholds:
 
-    if days < 0:
-        status = "overdue"
-    elif days == 0:
-        status = "due_today"
-    elif days <= 3:
-        status = "critical"
-    elif days <= 7:
-        status = "urgent"
-    else:
-        status = "normal"
+| `days` | `status` |
+|--------|----------|
+| `< 0` | `"overdue"` |
+| `== 0` | `"due_today"` |
+| `<= 3` | `"critical"` |
+| `<= 7` | `"urgent"` |
+| `> 7` | `"normal"` |
 
-    return {"days_remaining": days, "deadline": deadline_date, "status": status}
-```
+- Return `{"days_remaining": int, "deadline": str, "status": str}`
 
 ### 3.4 Register the tools with your agent
 
@@ -354,36 +334,23 @@ Turn 2: "How many days do I have?"
 
 ### 4.2 Add state tools to `tools.py`
 
-Uncomment and implement the state tools:
+Uncomment and implement `save_priority_subject` and `get_priority_subject`.
+
+First, uncomment the import at the top of `tools.py`:
 
 ```python
 from google.adk.tools import ToolContext
-
-def save_priority_subject(subject: str, tool_context: ToolContext) -> dict:
-    """Saves the student's most important/priority subject to remember for this session.
-
-    Args:
-        subject: The subject name the student is most concerned about.
-    """
-    tool_context.state["priority_subject"] = subject
-    return {
-        "saved": True,
-        "priority_subject": subject,
-        "message": f"Got it! I'll remember that {subject} is your priority.",
-    }
-
-
-def get_priority_subject(tool_context: ToolContext) -> dict:
-    """Retrieves the student's previously saved priority subject from session memory."""
-    subject = tool_context.state.get("priority_subject")
-    if subject:
-        return {"priority_subject": subject, "found": True}
-    return {
-        "priority_subject": None,
-        "found": False,
-        "message": "No priority subject saved yet.",
-    }
 ```
+
+Then implement the two functions. **Hints:**
+
+**`save_priority_subject`:**
+- `tool_context.state` is a regular Python dict — store `subject` under a key like `"priority_subject"`
+- Return a dict confirming what was saved (include `"saved": True` and the subject name)
+
+**`get_priority_subject`:**
+- Read from `tool_context.state` using `.get()` so it doesn't crash if the key doesn't exist yet
+- Return `{"priority_subject": ..., "found": True/False}` — include a helpful message when nothing is saved yet
 
 ### 4.3 Register the state tools in `agent.py`
 
@@ -457,84 +424,42 @@ This is a **workflow**: a task that the agent breaks down and executes across mu
 
 ### 5.1 Add the `create_study_plan` tool to `tools.py`
 
-```python
-def create_study_plan(subject: str, days_remaining: int, tool_context: ToolContext) -> dict:
-    """Creates a personalized study plan based on the subject and days remaining until deadline.
+Uncomment and implement `create_study_plan`.
 
-    Args:
-        subject: The subject to create a plan for.
-        days_remaining: Number of days until the deadline.
-    """
-    if days_remaining < 0:
-        urgency = "OVERDUE"
-        sessions = [
-            "Contact your professor immediately about the missed deadline.",
-            "Complete the work as soon as possible.",
-        ]
-    elif days_remaining == 0:
-        urgency = "DUE TODAY"
-        sessions = ["Focus entirely on this subject right now."]
-    elif days_remaining <= 3:
-        urgency = "CRITICAL"
-        sessions = [
-            f"Tonight: 3h deep focus on {subject} core concepts",
-            "Tomorrow: 2h practice problems + review notes",
-            "Day before deadline: 1h final review, no new material",
-        ]
-    elif days_remaining <= 7:
-        urgency = "HIGH"
-        sessions = [
-            f"Tonight: 2h study {subject} fundamentals",
-            "Next 2 days: 1.5h/day on practice problems",
-            "Day 4–5: 1h/day review and consolidation",
-            "Day before deadline: Light review only",
-        ]
-    else:
-        urgency = "NORMAL"
-        sessions = [
-            "Daily: 1h focused study sessions",
-            "Week 1: Cover all main topics",
-            "Week 2: Practice and review",
-            "Final days: Mock tests and revision",
-        ]
+**Hints:**
+- Use an `if/elif/else` ladder on `days_remaining` with these urgency levels:
 
-    plan = {
-        "subject": subject,
-        "days_remaining": days_remaining,
-        "urgency": urgency,
-        "study_sessions": sessions,
-        "tip": "Take a 10-minute break every 50 minutes (Pomodoro technique).",
-    }
-    tool_context.state["last_study_plan"] = plan
-    return plan
-```
+| `days_remaining` | `urgency` |
+|-----------------|-----------|
+| `< 0` | `"OVERDUE"` |
+| `== 0` | `"DUE TODAY"` |
+| `<= 3` | `"CRITICAL"` |
+| `<= 7` | `"HIGH"` |
+| `> 7` | `"NORMAL"` |
+
+- For each urgency level, create a list of `study_sessions` — concrete, time-specific actions the student should take
+- Build a `plan` dict that includes at minimum: `"subject"`, `"days_remaining"`, `"urgency"`, `"study_sessions"`
+- Before returning, save the plan to state so it can be referenced later: `tool_context.state["last_study_plan"] = plan`
 
 ### 5.2 Update the agent instruction and tools in `agent.py`
 
-The instruction is the agent's "system design" — it tells the agent *how* to orchestrate its tools:
+The instruction is the agent's "system design" — it tells the agent *how* to orchestrate its tools.
+
+Expand `INSTRUCTION` in `agent.py`. **Your instruction should tell the agent:**
+
+- Whenever the user mentions a subject (in any language), **always call `get_all_subjects` first** to get the canonical name — then use only that exact name in all subsequent tool calls
+- When the student expresses concern about a subject → call `save_priority_subject` with the canonical name
+- For deadlines or time remaining → always use tools, never guess dates
+- For creating a study plan, follow this exact sequence:
+  1. Check for a saved priority subject (`get_priority_subject`)
+  2. If none saved, ask which subject they need help with, then resolve the canonical name
+  3. Get the deadline (`get_subject_deadline`)
+  4. Calculate days remaining (`calculate_days_remaining`)
+  5. Create the plan (`create_study_plan`)
+
+Then update the tools list and imports:
 
 ```python
-INSTRUCTION = """You are a helpful and encouraging study planning assistant for university students.
-
-Whenever the user mentions a subject name (in any language or form):
-1. Call get_all_subjects first to get the canonical subject list
-2. Match the user's mention to the exact name in the list
-3. Use only that exact canonical name when calling any other tool or saving state
-
-When a student mentions they are worried about or focused on a subject, use save_priority_subject to remember it (always with the canonical name from get_all_subjects).
-
-When asked about deadlines or time remaining, always use tools to get accurate data — never guess dates.
-
-When creating a study plan:
-1. Check if there is a saved priority subject (use get_priority_subject)
-2. If not, ask the student which subject they need help with, then call get_all_subjects to resolve the canonical name
-3. Get the deadline for that subject (use get_subject_deadline)
-4. Calculate days remaining (use calculate_days_remaining)
-5. Create the study plan (use create_study_plan)
-
-Always be encouraging, specific, and realistic in your recommendations.
-"""
-
 root_agent = Agent(
     name="study_agent",
     model="gemini-3.1-flash-lite",
