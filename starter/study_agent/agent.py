@@ -1,9 +1,10 @@
 from google.adk.agents import Agent
 
 from .tools import (
-    calculate_days_remaining,
+    get_all_subjects,
     get_current_time,
     get_subject_deadline,
+    calculate_days_remaining,
     # TODO (Step 4): Uncomment after adding state tools to tools.py
     # get_priority_subject,
     # save_priority_subject,
@@ -26,6 +27,7 @@ root_agent = Agent(
     description="A student study planning assistant that tracks deadlines and creates personalized study plans.",
     instruction=INSTRUCTION,
     tools=[
+        get_all_subjects,
         get_current_time,
         get_subject_deadline,
         calculate_days_remaining,

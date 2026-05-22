@@ -1,6 +1,13 @@
 from datetime import datetime
 from google.adk.tools import ToolContext
 
+SUBJECT_DEADLINES = {
+    "NLP": "2026-05-25",
+    "Machine Learning": "2026-05-28",
+    "Data Structures and Algorithms": "2026-06-01",
+    "Artificial Intelligence": "2026-06-09",
+}
+
 
 def get_current_time() -> dict:
     """Returns the current date and time."""
@@ -8,22 +15,23 @@ def get_current_time() -> dict:
     return {"current_time": now.strftime("%Y-%m-%d %H:%M:%S"), "date": now.strftime("%Y-%m-%d")}
 
 
+def get_all_subjects() -> dict:
+    """Returns the list of all subjects that have deadlines tracked.
+    Always call this first when the user mentions a subject, to get the exact canonical name.
+    """
+    return {"subjects": list(SUBJECT_DEADLINES.keys())}
+
+
 def get_subject_deadline(subject: str) -> dict:
     """Gets the assignment or exam deadline for a given subject.
 
     Args:
-        subject: The name of the subject (e.g., 'NLP', 'Machine Learning').
+        subject: The exact subject name from get_all_subjects().
     """
-    deadlines = {
-        "NLP": "2026-05-25",
-        "Machine Learning": "2026-05-28",
-        "Data Structures and Algorithms": "2026-06-01",
-        "Artificial Intelligence": "2026-06-09",
-    }
-    subject_key = next((k for k in deadlines if k.lower() == subject.lower()), None)
+    subject_key = next((k for k in SUBJECT_DEADLINES if k.lower() == subject.lower()), None)
     if subject_key:
-        return {"subject": subject_key, "deadline": deadlines[subject_key], "found": True}
-    return {"subject": subject, "deadline": None, "found": False, "available_subjects": list(deadlines.keys())}
+        return {"subject": subject_key, "deadline": SUBJECT_DEADLINES[subject_key], "found": True}
+    return {"subject": subject, "deadline": None, "found": False, "available_subjects": list(SUBJECT_DEADLINES.keys())}
 
 
 def calculate_days_remaining(deadline_date: str) -> dict:
